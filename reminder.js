@@ -5,13 +5,14 @@ const store = new Store({
   });
 
 class Reminder {
-    addReminder(rmText, time) {
+    addReminder(rmText, time, isAllDay) {
         var reminders = this.getReminders();
         reminders.push({
             "id": reminders.length + 1,
             "reminder": rmText,
             "time": time,
-            "notified": false
+            "notified": false,
+            "isAllDay": isAllDay
         })
         store.set("reminders", reminders)
     }
@@ -25,6 +26,7 @@ class Reminder {
     }
 
     removeReminderById(reminderId){
+        
         let reminders = this.getReminders();
         reminders.forEach(function (item) {
             if(item.id == reminderId) {

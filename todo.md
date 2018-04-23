@@ -1,0 +1,4 @@
+- Snooze option
+- Set in startup 
+- View/Delete already set reminder
+- Reminder for network user

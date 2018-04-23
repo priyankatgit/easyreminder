@@ -14,7 +14,7 @@ const url = require('url')
 const Store = require('./store.js');
 const Reminder = require('./reminder.js');
 const Sherlock = require('sherlockjs');
-const notifier = require('node-notifier');
+const notifier = require('electron-notifications')
 
 let tray = null
 let win = null;
@@ -31,7 +31,6 @@ function loadWindow() {
     resizable: false,
     transparent: true,
     alwaysOnTop: true,
-    
   })
 
   win.loadURL(url.format({
@@ -46,15 +45,23 @@ function loadWindow() {
 function setupTray() {
   tray = new Tray(resourcePath + '/images/bell.png')
   const contextMenu = Menu.buildFromTemplate([{
-    label: 'Exit',
-    type: 'normal',
-    click: () => {
-      app.exit();
+      label: 'Add reminder(Ctrl+Shift+R)',
+      type: 'normal',
+      click: () => {
+        showReminderWindow();
+      }
+    },
+    {
+      label: 'Exit',
+      type: 'normal',
+      click: () => {
+        app.exit();
+      }
     }
-  }])
+  ])
+
   tray.setToolTip('Easy reminder')
   tray.setContextMenu(contextMenu)
-
   tray.on('click', () => {
     showReminderNotifcation(true);
   })
@@ -66,11 +73,15 @@ function registerShortcuts() {
   })
 
   globalShortcut.register('Ctrl+Shift+R', () => {
-    let clipboardText = clipboard.readText();
-
-    win.webContents.send('showReminerWin', clipboardText);
-    win.show();
+    showReminderWindow();
   })
+}
+
+function showReminderWindow() {
+  let clipboardText = clipboard.readText();
+
+  win.webContents.send('showReminerWin', clipboardText);
+  win.show();
 }
 
 function onReminderEntered() {
@@ -88,79 +99,101 @@ function onReminderEntered() {
         errorMessage = '';
 
       if (startDate == null) {
-        errorTitle = 'Time info missing';
-        errorMessage = 'Please mention time for your reminder.'
+        errorTitle = 'Error 404!';
+        errorMessage = 'Reminder time is missing'
       }
 
       if (title == null) {
-        errorTitle = 'Subject is missing';
-        errorMessage = 'Please mention subject for your reminder.'
+        errorTitle = 'Error 404!';
+        errorMessage = 'Reminder subject is missing'
       }
 
-      notifier.notify({
-        title: errorTitle,
+      const errorNotification = notifier.notify(errorTitle, {
         message: errorMessage,
-        icon: resourcePath + '/images/stopwatch_e.png',
-        sound: true,
-        wait: false,
-        timeout: 5,
-      }, );
+        icon: path.join(__dirname, 'resources/images/no-bell.png'),
+        duration: 5000,
+        buttons: ['Dismiss']
+      })
+
+      errorNotification.on('buttonClicked', (text, buttonIndex, options) => {
+        notification.close()
+      })
+
       return;
     }
 
-    reminder.addReminder(title, startDate)
+    reminder.addReminder(title, startDate, isAllDay)
+
     win.hide();
 
-    notifier.notify({
-      title: "Reminder added",
-      message: "Reminder added for "+ title,
-      icon: resourcePath + '/images/stopwatch_s.png',
-      sound: true,
-      wait: false,
-      timeout: 5,
-    }, );
+    const addNotification = notifier.notify("Added", {
+      message: "Reminder added for " + title,
+      icon: path.join(__dirname, 'resources/images/bell_64.png'),
+      duration: 5000,
+      buttons: ['Dismiss']
+    })
+
+    addNotification.on('buttonClicked', (text, buttonIndex, options) => {
+      addNotification.close()
+    })
   })
 }
 
 function reminderWatcher() {
   setInterval(function () {
-    tray.setImage(resourcePath+'/images/bell.png');
-   
+    tray.setImage(resourcePath + '/images/bell.png');
+
     showReminderNotifcation(false);
   }, 1000);
 }
 
 function showReminderNotifcation(showNotifiedReminder) {
-  let reminders = reminder.getReminders();  
-  if(reminders.length == 0) {
-    tray.setImage(resourcePath+'/images/bell.png');
-  }  
+  let reminders = reminder.getReminders();
+  if (reminders.length == 0) {
+    tray.setImage(resourcePath + '/images/bell.png');
+  }
 
   reminders.forEach(function (item) {
     var reminderTime = Date.parse(item.time);
     if (reminderTime <= (new Date())) {
 
-      if(trayIcon == 'bell.png') {
+      if (trayIcon == 'bell.png') {
         trayIcon = 'bell_red.png';
-      }
-      else {
+      } else {
         trayIcon = 'bell.png';
-      }      
+      }
 
-      tray.setImage(resourcePath+'/images/'+trayIcon);
+      tray.setImage(resourcePath + '/images/' + trayIcon);
 
       if (item.notified == showNotifiedReminder) {
         reminder.setNotified(reminders, item);
 
-        notifier.notify({
-          title: 'Reminder',
+        const notification = notifier.notify("Reminder", {
           message: item.reminder,
-          icon: resourcePath + '/images/alarm-clock.png',
-          sound: true,
-          wait: true,
-          timeout: 10,
-          reminderId: item.id
-        });
+          icon: path.join(__dirname, 'resources/images/ringing-bell.png'),
+          duration: 5184000,
+          buttons: ['Dismiss', 'Snooze'],
+          reminderItem: item
+        })
+
+        notification.on('buttonClicked', (text, buttonIndex, options) => {
+          if (text === 'Snooze') {
+
+            //If triggered reminder was type of all day then it is proposed to snooze by tomorrow default.
+            let isAllDayReminder = options.isAllDay || false;
+            let remindeAt = " by an hour";
+            if (isAllDayReminder) {
+              remindeAt = " by tomorrow";
+            }
+
+            let reminderText = options.reminderItem.reminder + " " + remindeAt;
+            win.webContents.send('showReminerWin', reminderText);
+            win.show();
+          }
+
+          reminder.removeReminderById(options.reminderItem.id);
+          notification.close()
+        })
       }
     }
   });
@@ -181,11 +214,6 @@ app.on('ready', () => {
   onReminderEntered();
 
   reminderWatcher();
-
-  notifier.on('click', function (notifierObject, options) {
-    console.log(options);
-    reminder.removeReminderById(options.reminderId);
-  });
 })
 
 app.on('will-quit', () => {
