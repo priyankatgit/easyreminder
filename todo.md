@@ -1,4 +1,3 @@
-- Snooze option
-- Set in startup 
+- Parsing issue for text eg. "What is staus of xyz by 4pm"
 - View/Delete already set reminder
 - Reminder for network user

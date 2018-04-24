@@ -46,19 +46,19 @@ function loadWindow() {
 function setupTray() {
   tray = new Tray(resourcePath + '/images/bell.png')
   const contextMenu = Menu.buildFromTemplate([{
-      label: 'Add reminder(Ctrl+Shift+R)',
-      type: 'normal',
-      click: () => {
-        showReminderWindow();
-      }
-    },
-    {
-      label: 'Exit',
-      type: 'normal',
-      click: () => {
-        app.exit();
-      }
+    label: 'Add reminder(Ctrl+Shift+R)',
+    type: 'normal',
+    click: () => {
+      showReminderWindow();
     }
+  },
+  {
+    label: 'Exit',
+    type: 'normal',
+    click: () => {
+      app.exit();
+    }
+  }
   ])
 
   tray.setToolTip('Easy reminder')
@@ -90,24 +90,25 @@ function onReminderEntered() {
 
     let data = Sherlock.parse(arg);
 
-    let title = data.eventTitle;
+    let title = arg;
     let startDate = data.startDate;
     let isAllDay = data.isAllDay;
 
-    if (startDate == null || title == null) {
+    let errorTitle = '',
+      errorMessage = '';
 
-      let errorTitle = '',
-        errorMessage = '';
+    if (startDate == null) {
+      errorTitle = 'Error 404!';
+      errorMessage = 'Reminder time is missing'
+    }
 
-      if (startDate == null) {
-        errorTitle = 'Error 404!';
-        errorMessage = 'Reminder time is missing'
-      }
-
-      if (title == null) {
-        errorTitle = 'Error 404!';
-        errorMessage = 'Reminder subject is missing'
-      }
+    if (errorTitle == '' && title == null) {
+      errorTitle = 'Error 404!';
+      errorMessage = 'Reminder subject is missing'
+    }
+    
+    //Validated reminder input
+    if (errorTitle != '') {
 
       const errorNotification = notifier.notify(errorTitle, {
         message: errorMessage,
@@ -123,8 +124,8 @@ function onReminderEntered() {
       return;
     }
 
-    reminder.addReminder(title, startDate, isAllDay)
 
+    reminder.addReminder(title, startDate, isAllDay)
     win.hide();
 
     const addNotification = notifier.notify("Added", {
