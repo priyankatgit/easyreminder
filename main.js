@@ -15,6 +15,7 @@ const Store = require('./store.js');
 const Reminder = require('./reminder.js');
 const Sherlock = require('sherlockjs');
 const notifier = require('electron-notifications')
+const AutoLaunch = require('auto-launch');
 
 let tray = null
 let win = null;
@@ -199,6 +200,17 @@ function showReminderNotifcation(showNotifiedReminder) {
   });
 }
 
+function setAppAutoLaunch() {
+  let autoLaunch = new AutoLaunch({
+    name: 'easyreminder',
+    path: app.getPath('exe'),
+  });
+
+  autoLaunch.isEnabled().then((isEnabled) => {
+    if (!isEnabled) autoLaunch.enable();
+  });
+}
+
 app.setAppUserModelId("1");
 
 app.on('ready', () => {
@@ -214,6 +226,8 @@ app.on('ready', () => {
   onReminderEntered();
 
   reminderWatcher();
+
+  setAppAutoLaunch();
 })
 
 app.on('will-quit', () => {
