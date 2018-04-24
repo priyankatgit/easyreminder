@@ -180,15 +180,7 @@ function showReminderNotifcation(showNotifiedReminder) {
 
         notification.on('buttonClicked', (text, buttonIndex, options) => {
           if (text === 'Snooze') {
-
-            //If triggered reminder was type of all day then it is proposed to snooze by tomorrow default.
-            let isAllDayReminder = options.isAllDay || false;
-            let remindeAt = " by an hour";
-            if (isAllDayReminder) {
-              remindeAt = " by tomorrow";
-            }
-
-            let reminderText = options.reminderItem.reminder + " " + remindeAt;
+            let reminderText = options.reminderItem.reminder;
             win.webContents.send('showReminerWin', reminderText);
             win.show();
           }
