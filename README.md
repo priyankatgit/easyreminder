@@ -5,7 +5,7 @@ It is cross platform desktop application based on ElectronJS to setup quick remi
 *Just press `ctrl+shift+r` and set a reminder with one simple line.*
 
 
-### Installtion
+### Installation
 - Install latest version of node
 - `npm install` to install all the dependency node modules 
 - `npm start` to run application
