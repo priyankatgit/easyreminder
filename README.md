@@ -1,7 +1,7 @@
 # easyreminder
 An application to set a reminder with one simple line. 
 
-It is a cross platform application based on ElectronJS to setup quick reminder. 
+It is cross platform desktop application based on ElectronJS to setup quick reminder. 
 *Just press `ctrl+shift+r` and set a reminder with one simple line.*
 
 
