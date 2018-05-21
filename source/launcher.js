@@ -13,6 +13,7 @@ const {
   const Reminder = require('./reminder.js');
   const Sherlock = require('sherlockjs');
   const notifier = require('electron-notifications')
+  const { showReminders, updateReminderToRenderer } = require('./reminder_mgmt');
   
   let win = null;
   let trayIcon = constant.TRAY_ICON;
@@ -20,7 +21,7 @@ const {
   const reminder = new Reminder();
   let appTray = null;
 
-  function setBrowserWindow() {
+  function setLauncherWindow() {
     win = new BrowserWindow({
         width: 900,
         height: 100,
@@ -28,15 +29,14 @@ const {
         resizable: false,
         transparent: true,
         alwaysOnTop: true,
+        show: false,
       })
     
       win.loadURL(url.format({
-        pathname: path.join(__basedir, 'index.html'),
+        pathname: path.join(__basedir, 'view/launcher.html'),
         protocol: 'file:',
         slashes: true
       }))
-    
-      win.hide();
   }
 
   function registerShortcuts() {
@@ -49,19 +49,18 @@ const {
     })
   }
 
-  function showLauncher() {
-    let clipboardText = clipboard.readText();
-    win.webContents.send('showReminerWin', clipboardText);
+  function showLauncher(reminder) {
+    win.webContents.send('showReminerWin', reminder);
     win.show();
-    console.log(win)
+    //win.webContents.openDevTools();
   }
   
   function onReminderEntered() {
     ipcMain.on('onReminderEnter', (event, arg) => {
-  
-      let data = Sherlock.parse(arg);
-  
-      let title = arg;
+      
+      let data = Sherlock.parse(arg.reminderText);
+      
+      let title = arg.reminderText;
       let startDate = data.startDate;
       let isAllDay = data.isAllDay;
   
@@ -95,25 +94,25 @@ const {
         return;
       }
   
-  
-      reminder.addReminder(title, startDate, isAllDay)
+      reminder.setReminder(arg.reminderId, title, startDate, isAllDay)
       win.hide();
-  
-      const addNotification = notifier.notify("Added", {
-        message: "Reminder added for " + title,
-        icon: path.join(__basedir, 'resources/images/bell_64.png'),
-        duration: 5000,
-        buttons: ['Dismiss']
-      })
-  
-      addNotification.on('buttonClicked', (text, buttonIndex, options) => {
-        addNotification.close()
-      })
-    })
-  }
 
-  function triggerAction() {
-    
+      updateReminderToRenderer();
+      
+      //Donot popup notification if reminder is updated
+      if(arg.reminderId != 0) {
+        const addNotification = notifier.notify("Added", {
+          message: "Reminder added for " + title,
+          icon: path.join(__basedir, 'resources/images/bell_64.png'),
+          duration: 5000,
+          buttons: ['Dismiss']
+        })
+
+        addNotification.on('buttonClicked', (text, buttonIndex, options) => {
+          addNotification.close()
+        })
+      }
+    })
   }
   
   function reminderWatcher() {
@@ -171,13 +170,15 @@ const {
  function initLauncher(tray) {
     appTray = tray;
 
-    setBrowserWindow();
+    setLauncherWindow();
 
     reminderWatcher();
     
     onReminderEntered();
 
     registerShortcuts();
+
+    showReminders(showLauncher);
   }
 
   module.exports = {

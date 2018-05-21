@@ -14,7 +14,7 @@
             display: block;
             padding: 3px;
             font-size: 2em;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             color: beige;
             width: 100vw;
             height: 100vh;
@@ -52,17 +52,26 @@
         const {
             ipcRenderer
         } = require('electron')
+        
+        //To store reminder if it is open for edit
+        let reminder = null;
 
-        //Registor global shortcut event from main to renderer process.
         ipcRenderer.on('showReminerWin', (event, arg) => {
-            document.getElementById("reminderText").value = arg;
+            reminder = arg;
+            reminderText = arg != null ? arg.reminder : '';
+            document.getElementById("reminderText").value = reminderText;
         })
 
         document.getElementById("reminderText").addEventListener("keyup", (event) => {
             event.preventDefault();
             if (event.keyCode === 13) {
                 let reminderText = document.getElementById("reminderText").value;
-                ipcRenderer.send('onReminderEnter', reminderText);
+                let reminderObj = {
+                    reminderId: reminder != null ? reminder.id : 0,
+                    reminderText: reminderText
+                }
+
+                ipcRenderer.send('onReminderEnter', reminderObj);
             }
         });
     </script>

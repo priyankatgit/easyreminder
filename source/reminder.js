@@ -5,16 +5,41 @@ const store = new Store({
   });
 
 class Reminder {
+
+    setReminder(reminderId, title, startDate, isAllDay) {
+        if(reminderId == 0) {
+            this.addReminder(title, startDate, isAllDay)
+        }
+        else {
+            this.updateReminder(reminderId, title, startDate, isAllDay)
+        }
+    }
+
     addReminder(rmText, time, isAllDay) {
-        var reminders = this.getReminders();
-        reminders.push({
-            "id": reminders.length + 1,
+        let reminders = this.getReminders();
+        let id = reminders.length + 1
+        let reminder = this.getReminderObj(id, rmText, time, isAllDay);
+        reminders.push(reminder)
+        store.set("reminders", reminders)
+    }
+
+    updateReminder(id, rmText, time, isAllDay) {
+        this.removeReminderById(id);
+
+        let reminders = this.getReminders();
+        let reminder = this.getReminderObj(id, rmText, time, isAllDay);
+        reminders.push(reminder)
+        store.set("reminders", reminders)
+    }
+
+    getReminderObj(id, rmText, time, isAllDay) {
+        return {
+            "id": id,
             "reminder": rmText,
             "time": time,
             "notified": false,
             "isAllDay": isAllDay
-        })
-        store.set("reminders", reminders)
+        }
     }
 
     removeReminder(reminder) {
@@ -26,7 +51,6 @@ class Reminder {
     }
 
     removeReminderById(reminderId){
-        
         let reminders = this.getReminders();
         reminders.forEach(function (item) {
             if(item.id == reminderId) {
@@ -41,6 +65,11 @@ class Reminder {
     getReminders() {
         //Returns all stored reminders. If it first time return empty array becasue reminder file is not created yet.
         let reminders = store.get('reminders') || [];
+
+        reminders.sort(function(a, b) {
+            return a.id - b.id;
+        });
+        
         return reminders;
     }
 

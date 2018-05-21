@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="../node_modules/material-design-lite/material.min.css">
+    <script src="../node_modules/material-design-lite/material.min.js"></script>
+
+    <style>
+        @font-face {
+            font-family: 'Material Icons';
+            font-style: normal;
+            font-weight: 400;
+            src: url(../resources/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2) format('woff2');
+        }
+
+        .material-icons {
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+
+
+        .header {
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .rm-card-wide.mdl-card {
+            width: 80%;
+            height: 80px;
+            min-height: 80px;
+            margin: 20px auto;
+        }
+
+        .page-content {
+            padding-top: 20px;
+        }
+
+        /* .rm-act {
+            display: none;
+        } */
+
+        .rm-act button {
+            float: right;
+            margin: 5px 0;
+        }
+
+        .rm-act i {
+            color: #585858;
+            font-size: 20px;
+        }
+
+        .active {
+            display: inline-block;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="rem-list mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row" style="padding:0 40px 0 20px;">
+                <span class="mdl-layout-title">Reminders</span>
+            </div>
+        </header>
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <div class="mdc-card" v-for="reminder in reminders">
+                    <div class="rm-card-wide mdl-card mdl-shadow--2dp">
+                        <div class="mdl-card__supporting-text">
+                            {{reminder.reminder}}
+                        </div>
+                        <div class="rm-act">
+                            <rem-timer v-bind:rem-date='reminder.time'></rem-timer>
+                            <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" @click="deleteReminder(reminder)">
+                                <i class="material-icons">delete</i>
+                            </button>
+                            <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" @click="editReminder(reminder)">
+                                <i class="material-icons">edit</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;text-align: center;">
+                    <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" @click="addReminder()">
+                        Add Reminder
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../resources/vue.js"></script>
+    <script>
+        let moment = require('moment');
+        const {
+            ipcRenderer
+        } = require('electron')
+
+        ipcRenderer.on('onShowReminders', (event, reminders) => {
+            app.reminders = reminders;
+        })
+
+        let testData = [{
+                reminder: "Pay refresh mobile bill by 2PM tomorrow",
+                time: "test time 1"
+            },
+            {
+                reminder: "Pay refresh mobile bill by 2PM tomorrow",
+                time: "test time 1"
+            }
+        ]
+
+        let app = new Vue({
+            data: {
+                reminders: testData,
+                isActive: false,
+                editedReminder: null
+            },
+
+            methods: {
+                addReminder: function () {
+                    ipcRenderer.send('onAddReminder');
+                },
+
+                deleteReminder: function (reminder) {
+                    this.reminders.splice(this.reminders.indexOf(reminder), 1);
+                    ipcRenderer.send('onDeleteReminder', reminder);
+                },
+
+                editReminder: function (reminder) {
+                    ipcRenderer.send('onEditReminder', reminder);
+                }
+            }
+        });
+
+        Vue.component('rem-timer', {
+            props: {
+                remDate: null
+            },
+            data: function () {
+                return {
+                    remainingTime: ''
+                }
+            },
+            created: function () {
+                console.log(this.remDate)
+
+                // Set the date we're counting down to
+                var countDownDate = new Date(this.remDate).getTime();
+
+                // Update the count down every 1 second
+                var x = setInterval(function () {
+
+                    // Get todays date and time
+                    var now = new Date().getTime();
+                    console.log(now)
+                    console.log(new Date(this.remDate))
+
+                    // Find the distance between now an the count down date
+                    var distance = countDownDate - now;
+
+                    // Time calculations for days, hours, minutes and seconds
+                    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    // Display the result in the element with id="demo"
+                    this.remainingTime = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+
+                    // If the count down is finished, write some text 
+                    if (distance < 0) {
+                        clearInterval(x);
+                        this.remainingTime = "EXPIRED";
+                    }
+
+                    console.log(this.remainingTime)
+                }.bind(this), 1000);
+            },
+            template: '<span>Remaining time {{ remainingTime }} </span>'
+        })
+        app.$mount('.rem-list')
+    </script>
+</body>
+
+</html>

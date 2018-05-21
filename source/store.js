@@ -11,6 +11,7 @@ class Store {
     this.path = path.join(userDataPath, opts.configName + '.json');
 
     this.data = parseDataFile(this.path);
+    console.log(this.path )
   }
   
   // This will just return the property on the `data` object

@@ -1,29 +1,34 @@
 const {
-    app,
-    Menu,
-    Tray
-  } = require('electron')
+  app,
+  Menu,
+  Tray
+} = require('electron')
 
-const { constant } = require('./constant.js');
-const { initLauncher, showLauncher } = require('./launcher.js');
+const {
+  constant
+} = require('./constant');
+const {
+  initLauncher,
+  showLauncher
+} = require('./launcher');
 const AutoLaunch = require('auto-launch');
 
 function setupTray() {
   let tray = new Tray(constant.RESOURCE_PATH + '/images/bell.png');
   const contextMenu = Menu.buildFromTemplate([{
-    label: 'Add reminder(Ctrl+Shift+R)',
-    type: 'normal',
-    click: () => {
-      showLauncher();
+      label: 'Add reminder(Ctrl+Shift+R)',
+      type: 'normal',
+      click: () => {
+        showLauncher();
+      }
+    },
+    {
+      label: 'Exit',
+      type: 'normal',
+      click: () => {
+        app.exit();
+      }
     }
-  },
-  {
-    label: 'Exit',
-    type: 'normal',
-    click: () => {
-      app.exit();
-    }
-  }
   ])
 
   tray.setToolTip('Easy reminder')
@@ -46,16 +51,13 @@ function setAppAutoLaunch() {
   });
 }
 
-  function initApp() {
-    setAppAutoLaunch();
-
-    let tray = setupTray();
-    
-    initLauncher(tray);
-  }
-
-  module.exports = {
-      initApp: initApp
-  }
-
+function initApp() {
+  setAppAutoLaunch();
+  let tray = setupTray();
   
+  initLauncher(tray);
+}
+
+module.exports = {
+  initApp: initApp
+}
