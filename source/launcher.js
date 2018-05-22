@@ -154,8 +154,7 @@ const {
   
           notification.on('buttonClicked', (text, buttonIndex, options) => {
             if (text === 'Snooze') {
-              let reminderText = options.reminderItem.reminder;
-              win.webContents.send('showReminerWin', reminderText);
+              win.webContents.send('showReminerWin', options.reminderItem);
               win.show();
             }
   
