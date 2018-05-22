@@ -56,16 +56,13 @@ function ipcMainFunctions(showLauncher) {
 }
 
 function showReminders(showLauncher) {
-  if (remindersWindow == null) {
-    remindersWindow = createRemindersWindow();
+  remindersWindow = createRemindersWindow();
+  remindersWindow.once('ready-to-show', () => {
+    remindersWindow.show();
+    updateReminderToRenderer();
+  });
 
-    remindersWindow.once('ready-to-show', () => {
-      remindersWindow.show();
-      updateReminderToRenderer();
-    });
-
-    ipcMainFunctions(showLauncher);
-  }
+  ipcMainFunctions(showLauncher);
 
   //remindersWindow.webContents.openDevTools();
 }
