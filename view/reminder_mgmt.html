@@ -47,13 +47,11 @@
             padding-top: 20px;
         }
 
-        /* .rm-act {
-            display: none;
-        } */
-
-        .rm-act button {
-            float: right;
+            .card-ft {
             margin: 5px 0;
+        }
+        .rm-act {
+            float:right;
         }
 
         .rm-act i {
@@ -63,6 +61,21 @@
 
         .active {
             display: inline-block;
+        }
+        .rm-timer.mdl-chip, .rm-timer .mdl-chip__contact, .rm-timer .mdl-chip {
+            line-height: 24px;
+            height: 24px;
+        }
+
+        .rm-timer .mdl-chip__contact{
+            width: 24px;
+        }
+        .mdl-card__supporting-text .card-text {
+            font-size: 16px;
+        }
+        .tm-txt {
+            font-size: 14px;
+            font-weight: bold;
         }
     </style>
 
@@ -80,16 +93,20 @@
                 <div class="mdc-card" v-for="reminder in reminders">
                     <div class="rm-card-wide mdl-card mdl-shadow--2dp">
                         <div class="mdl-card__supporting-text">
-                            {{reminder.reminder}}
+                            <span class="card-text">{{reminder.reminder}}</span>
                         </div>
-                        <div class="rm-act">
-                            <rem-timer v-bind:rem-date='reminder.time'></rem-timer>
-                            <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" @click="deleteReminder(reminder)">
-                                <i class="material-icons">delete</i>
-                            </button>
-                            <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" @click="editReminder(reminder)">
-                                <i class="material-icons">edit</i>
-                            </button>
+                        <div class="card-ft">
+                            <div style="padding-left: 16px;display: inline-block;">
+                                    <rem-timer v-bind:rem-date='reminder.time'></rem-timer>
+                            </div>
+                            <div class="rm-act">
+                                <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" @click="deleteReminder(reminder)">
+                                    <i class="material-icons">delete</i>
+                                </button>
+                                <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" @click="editReminder(reminder)">
+                                    <i class="material-icons">edit</i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,7 +143,7 @@
 
         let app = new Vue({
             data: {
-                reminders: testData,
+                reminders: [],
                 isActive: false,
                 editedReminder: null
             },
@@ -153,45 +170,56 @@
             },
             data: function () {
                 return {
-                    remainingTime: ''
+                    remainingTime: '',
+                    timerInterval: null,
                 }
             },
             created: function () {
-                console.log(this.remDate)
-
-                // Set the date we're counting down to
-                var countDownDate = new Date(this.remDate).getTime();
-
-                // Update the count down every 1 second
-                var x = setInterval(function () {
-
-                    // Get todays date and time
-                    var now = new Date().getTime();
-                    console.log(now)
-                    console.log(new Date(this.remDate))
-
-                    // Find the distance between now an the count down date
-                    var distance = countDownDate - now;
-
-                    // Time calculations for days, hours, minutes and seconds
-                    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    // Display the result in the element with id="demo"
-                    this.remainingTime = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
-
-                    // If the count down is finished, write some text 
-                    if (distance < 0) {
-                        clearInterval(x);
-                        this.remainingTime = "EXPIRED";
-                    }
-
-                    console.log(this.remainingTime)
-                }.bind(this), 1000);
+                this.startTimer();
             },
-            template: '<span>Remaining time {{ remainingTime }} </span>'
+            methods: {
+                startTimer: function () {
+                    // Set the date we're counting down to
+                    var countDownDate = new Date(this.remDate).getTime();
+
+                    // Update the count down every 1 second
+                    this.timtimerInterval = setInterval(function () {
+
+                        // Get todays date and time
+                        var now = new Date().getTime();
+
+                        // Find the distance between now an the count down date
+                        var distance = countDownDate - now;
+
+                        // Time calculations for days, hours, minutes and seconds
+                        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                        // Display the result in the element with id="demo"
+                        this.remainingTime = "<span class='tm-txt'>"+days+"</span>"+ "d " 
+                                            + "<span class='tm-txt'>"+hours+"</span>" + "h " 
+                                            + "<span class='tm-txt'>"+minutes+"</span>" + "m " 
+                                            + "<span class='tm-txt'>"+seconds+"</span>" +"s ";
+
+                        // If the count down is finished, write some text
+                        //TODO: clearInterval is not working
+                        //TODO: on showReminders call clear running intervals
+                        //TODO: on dismiss reminder clear interval for that reminder
+                        if (distance < 0) {
+                            clearInterval(this.timerInterval);
+                            this.remainingTime = "EXPIRED";
+                        }
+
+                        console.log(this.remainingTime)
+                    }.bind(this), 1000);
+                }
+            },
+            template: `<span class="rm-timer mdl-chip mdl-chip--contact">
+                        <i style="margin-right:5px;float:left" class="material-icons">av_timer</i>
+                        <span class="mdl-chip__text" v-html="remainingTime"></span>
+                      </span>`
         })
         app.$mount('.rem-list')
     </script>

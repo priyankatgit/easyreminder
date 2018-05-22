@@ -13,7 +13,7 @@ const {
   const Reminder = require('./reminder.js');
   const Sherlock = require('sherlockjs');
   const notifier = require('electron-notifications')
-  const { showReminders, updateReminderToRenderer } = require('./reminder_mgmt');
+  const { updateReminderToRenderer } = require('./reminder_mgmt');
   
   let win = null;
   let trayIcon = constant.TRAY_ICON;
@@ -161,6 +161,8 @@ const {
   
             reminder.removeReminderById(options.reminderItem.id);
             notification.close()
+
+            updateReminderToRenderer();
           })
         }
       }
@@ -177,8 +179,6 @@ const {
     onReminderEntered();
 
     registerShortcuts();
-
-    showReminders(showLauncher);
   }
 
   module.exports = {

@@ -12,14 +12,22 @@ const {
   showLauncher
 } = require('./launcher');
 const AutoLaunch = require('auto-launch');
+const { showReminders } = require('./reminder_mgmt');
 
 function setupTray() {
   let tray = new Tray(constant.RESOURCE_PATH + '/images/bell.png');
   const contextMenu = Menu.buildFromTemplate([{
-      label: 'Add reminder(Ctrl+Shift+R)',
+      label: 'Add reminder (Ctrl+Shift+R)',
       type: 'normal',
       click: () => {
         showLauncher();
+      }
+    },
+    {
+      label: 'View reminders',
+      type: 'normal',
+      click: () => {
+        showReminders(showLauncher);
       }
     },
     {

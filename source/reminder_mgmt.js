@@ -67,7 +67,7 @@ function showReminders(showLauncher) {
     ipcMainFunctions(showLauncher);
   }
 
-  remindersWindow.webContents.openDevTools();
+  //remindersWindow.webContents.openDevTools();
 }
 
 function updateReminderToRenderer() {
