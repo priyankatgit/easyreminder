@@ -40,10 +40,7 @@ function setupTray() {
   ])
 
   tray.setToolTip('Easy reminder')
-  tray.setContextMenu(contextMenu)
-  tray.on('click', () => {
-    showReminderNotifcation(true);
-  });
+  tray.setContextMenu(contextMenu) 
 
   return tray;
 }

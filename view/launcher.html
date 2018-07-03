@@ -60,6 +60,7 @@
             reminder = arg;
             reminderText = arg != null ? arg.reminder : '';
             document.getElementById("reminderText").value = reminderText;
+            document.getElementById("reminderText").focus();
         })
 
         document.getElementById("reminderText").addEventListener("keyup", (event) => {
@@ -72,6 +73,10 @@
                 }
 
                 ipcRenderer.send('onReminderEnter', reminderObj);
+            }
+
+            if (event.keyCode === 27) {
+                ipcRenderer.send('onReminderEscap');
             }
         });
     </script>

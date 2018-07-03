@@ -39,11 +39,7 @@ const {
       }))
   }
 
-  function registerShortcuts() {
-    globalShortcut.register('Escape', () => {
-      win.hide();
-    })
-  
+  function registerShortcuts() {  
     globalShortcut.register('Ctrl+Shift+R', () => {
         showLauncher();
     })
@@ -53,6 +49,12 @@ const {
     win.webContents.send('showReminerWin', reminder);
     win.show();
     //win.webContents.openDevTools();
+  }
+
+  function onReminderEscaped() {
+    ipcMain.on('onReminderEscap', (event, arg) => {
+      win.hide();
+    });
   }
   
   function onReminderEntered() {
@@ -176,6 +178,8 @@ const {
     reminderWatcher();
     
     onReminderEntered();
+
+    onReminderEscaped();
 
     registerShortcuts();
   }
