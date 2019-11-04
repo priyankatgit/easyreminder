@@ -4,20 +4,21 @@ const {
     globalShortcut,
     clipboard,
     ipcMain
-  } = require('electron')
+  } = require('electron');
 
   const { constant } = require('./constant.js');
-  const path = require('path')
-  const url = require('url')
+  const path = require('path');
+  const url = require('url');
   const Store = require('./store.js');
   const Reminder = require('./reminder.js');
   const Sherlock = require('sherlockjs');
-  const notifier = require('electron-notifications')
+  const notifier = require('electron-notifications');
   const { updateReminderToRenderer } = require('./reminder_mgmt');
+  const Badge = require('electron-windows-badge');
   
   let win = null;
   let trayIcon = constant.TRAY_ICON;
-  let resourcePath = ''
+  let resourcePath = '';
   const reminder = new Reminder();
   let appTray = null;
 
@@ -29,31 +30,42 @@ const {
         resizable: false,
         transparent: true,
         alwaysOnTop: true,
-        show: false,
-      })
+        show: true,
+        minimize: true,
+        icon: constant.RESOURCE_PATH + '/images/bell_64.png',
+        title: "Easy Reminder"
+      });
     
       win.loadURL(url.format({
         pathname: path.join(__basedir, 'view/launcher.html'),
         protocol: 'file:',
         slashes: true
-      }))
+      }));
+
+      new Badge(win, {});
+      
+      win.webContents.once('dom-ready', () => {
+        win.webContents.send('showTaskCount', reminder.getTaskCount());      
+        win.minimize();      
+      });
   }
 
   function registerShortcuts() {  
     globalShortcut.register('Ctrl+Shift+R', () => {
         showLauncher();
-    })
+    });
   }
 
-  function showLauncher(reminder) {
+  function showLauncher(reminder) {    
     win.webContents.send('showReminerWin', reminder);
-    win.show();
+    win.restore();
     //win.webContents.openDevTools();
   }
 
   function onReminderEscaped() {
     ipcMain.on('onReminderEscap', (event, arg) => {
-      win.hide();
+      win.minimize();   
+      win.webContents.send('showReminerWin', null);
     });
   }
   
@@ -68,15 +80,20 @@ const {
   
       let errorTitle = '',
         errorMessage = '';
+
+      var type = "reminder";
+      if(title.toLowerCase().startsWith("#t ")) {
+          type = "task";
+      }
   
-      if (startDate == null) {
+      if (type == "reminder" && startDate == null) {
         errorTitle = 'Error 404!';
-        errorMessage = 'Reminder time is missing'
+        errorMessage = 'Reminder time is missing';
       }
   
       if (errorTitle == '' && title == null) {
         errorTitle = 'Error 404!';
-        errorMessage = 'Reminder subject is missing'
+        errorMessage = 'Reminder subject is missing';
       }
       
       //Validated reminder input
@@ -87,17 +104,18 @@ const {
           icon: path.join(__basedir, 'resources/images/no-bell.png'),
           duration: 5000,
           buttons: ['Dismiss']
-        })
+        });
   
         errorNotification.on('buttonClicked', (text, buttonIndex, options) => {
-          notification.close()
-        })
+          notification.close();
+        });
   
         return;
       }
   
-      reminder.setReminder(arg.reminderId, title, startDate, isAllDay)
-      win.hide();
+      reminder.setItem(arg.reminderId, title, startDate, isAllDay, type);
+      win.minimize();
+      win.webContents.send('showTaskCount', reminder.getTaskCount());
 
       updateReminderToRenderer();
       
@@ -108,13 +126,13 @@ const {
           icon: path.join(__basedir, 'resources/images/bell_64.png'),
           duration: 5000,
           buttons: ['Dismiss']
-        })
+        });
 
         addNotification.on('buttonClicked', (text, buttonIndex, options) => {
-          addNotification.close()
-        })
+          addNotification.close();
+        });
       }
-    })
+    });
   }
   
   function reminderWatcher() {
@@ -126,12 +144,17 @@ const {
   }
   
   function showReminderNotifcation(showNotifiedReminder) {
-    let reminders = reminder.getReminders();
+    let reminders = reminder.getItems();
     if (reminders.length == 0) {
       appTray.setImage(constant.RESOURCE_PATH + '/images/bell.png');
     }
   
     reminders.forEach(function (item) {
+
+      if(item.time == null && item.type == "task") {
+        return;
+      }
+
       var reminderTime = Date.parse(item.time);
       if (reminderTime <= (new Date())) {
   
@@ -152,22 +175,26 @@ const {
             duration: 5184000,
             buttons: ['Dismiss', 'Snooze'],
             reminderItem: item
-          })
+          });
   
           notification.on('buttonClicked', (text, buttonIndex, options) => {
             if (text === 'Snooze') {
               win.webContents.send('showReminerWin', options.reminderItem);
-              win.show();
+              win.restore();
             }
   
             reminder.removeReminderById(options.reminderItem.id);
-            notification.close()
+            notification.close();
 
             updateReminderToRenderer();
-          })
+          });
         }
       }
     });
+  }
+
+  function getReminderWin() {
+    return win;
   }
 
  function initLauncher(tray) {
@@ -186,5 +213,6 @@ const {
 
   module.exports = {
       initLauncher: initLauncher,
-      showLauncher: showLauncher
-  }
+      showLauncher: showLauncher,
+      reminderWin: getReminderWin
+  };

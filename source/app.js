@@ -2,17 +2,21 @@ const {
   app,
   Menu,
   Tray
-} = require('electron')
+} = require('electron');
 
 const {
   constant
 } = require('./constant');
+
 const {
   initLauncher,
-  showLauncher
+  showLauncher,
+  reminderWin
 } = require('./launcher');
+
 const AutoLaunch = require('auto-launch');
 const { showReminders } = require('./reminder_mgmt');
+const path = require('path');
 
 function setupTray() {
   let tray = new Tray(constant.RESOURCE_PATH + '/images/bell.png');
@@ -27,7 +31,7 @@ function setupTray() {
       label: 'View reminders',
       type: 'normal',
       click: () => {
-        showReminders(showLauncher);
+        showReminders(showLauncher, reminderWin);
       }
     },
     {
@@ -37,11 +41,10 @@ function setupTray() {
         app.exit();
       }
     }
-  ])
+  ]);
 
-  tray.setToolTip('Easy reminder')
-  tray.setContextMenu(contextMenu) 
-
+  tray.setToolTip('Easy reminder');
+  tray.setContextMenu(contextMenu);   
   return tray;
 }
 
@@ -65,4 +68,4 @@ function initApp() {
 
 module.exports = {
   initApp: initApp
-}
+};

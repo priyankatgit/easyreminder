@@ -96,7 +96,7 @@
                             <span class="card-text">{{reminder.reminder}}</span>
                         </div>
                         <div class="card-ft">
-                            <div style="padding-left: 16px;display: inline-block;">
+                            <div style="padding-left: 16px;display: inline-block;" v-if="reminder.type != 'task'">                                
                                     <rem-timer v-bind:rem-date='reminder.time'></rem-timer>
                             </div>
                             <div class="rm-act">
@@ -131,16 +131,6 @@
             app.reminders = reminders;
         })
 
-        let testData = [{
-                reminder: "Pay refresh mobile bill by 2PM tomorrow",
-                time: "test time 1"
-            },
-            {
-                reminder: "Pay refresh mobile bill by 2PM tomorrow",
-                time: "test time 1"
-            }
-        ]
-
         let app = new Vue({
             data: {
                 reminders: [],
@@ -155,7 +145,7 @@
 
                 deleteReminder: function (reminder) {
                     this.reminders.splice(this.reminders.indexOf(reminder), 1);
-                    ipcRenderer.send('onDeleteReminder', reminder);
+                    ipcRenderer.send('onDeleteReminder', reminder);                    
                 },
 
                 editReminder: function (reminder) {

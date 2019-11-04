@@ -54,13 +54,16 @@
         } = require('electron')
         
         //To store reminder if it is open for edit
-        let reminder = null;
+        let reminder = null;        
+        ipcRenderer.on('showTaskCount', (event, arg) => {                        
+            ipcRenderer.sendSync('update-badge', arg);
+        })
 
         ipcRenderer.on('showReminerWin', (event, arg) => {
             reminder = arg;
             reminderText = arg != null ? arg.reminder : '';
             document.getElementById("reminderText").value = reminderText;
-            document.getElementById("reminderText").focus();
+            document.getElementById("reminderText").focus();            
         })
 
         document.getElementById("reminderText").addEventListener("keyup", (event) => {
