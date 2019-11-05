@@ -43,18 +43,10 @@ class Reminder {
         };
     }
 
-    removeReminder(reminder) {
-        let reminders = this.getItems();
-        const index = reminders.indexOf(reminder);
-        reminders.splice(index, 1);
-
-        store.set("reminders", reminders);
-    }
-
     removeReminderById(reminderId){
         let reminders = this.getItems();
         reminders.forEach(function (item) {
-            if(item.id == reminderId) {
+            if(item.id == reminderId) {            
                const index = reminders.indexOf(item);
                reminders.splice(index, 1);
 

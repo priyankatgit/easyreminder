@@ -127,8 +127,12 @@
             ipcRenderer
         } = require('electron')
 
-        ipcRenderer.on('onShowReminders', (event, reminders) => {
+        ipcRenderer.on('onShowReminders', (event, reminders) => {            
             app.reminders = reminders;
+        })
+
+        ipcRenderer.on('showTaskCount', (event, arg) => {                 
+            ipcRenderer.sendSync('update-badge', arg);
         })
 
         let app = new Vue({

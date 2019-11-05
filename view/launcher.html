@@ -54,10 +54,7 @@
         } = require('electron')
         
         //To store reminder if it is open for edit
-        let reminder = null;        
-        ipcRenderer.on('showTaskCount', (event, arg) => {                        
-            ipcRenderer.sendSync('update-badge', arg);
-        })
+        let reminder = null;                
 
         ipcRenderer.on('showReminerWin', (event, arg) => {
             reminder = arg;

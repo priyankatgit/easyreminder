@@ -31,7 +31,7 @@ function setupTray() {
       label: 'View reminders',
       type: 'normal',
       click: () => {
-        showReminders(showLauncher, reminderWin);
+        showReminders(showLauncher).show();
       }
     },
     {
@@ -61,8 +61,10 @@ function setAppAutoLaunch() {
 
 function initApp() {
   setAppAutoLaunch();
-  let tray = setupTray();
   
+  showReminders(showLauncher);
+
+  let tray = setupTray();
   initLauncher(tray);
 }
 

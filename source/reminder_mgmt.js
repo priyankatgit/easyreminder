@@ -14,6 +14,7 @@ const Store = require('./store.js');
 const Reminder = require('./reminder.js');
 const Sherlock = require('sherlockjs');
 const notifier = require('electron-notifications');
+const Badge = require('electron-windows-badge');
 
 let remindersWindow = null;
 let trayIcon = constant.TRAY_ICON;
@@ -29,7 +30,8 @@ function createRemindersWindow() {
     resizable: true,
     transparent: false,
     alwaysOnTop: true,
-    show:false,
+    minimize: true,
+    show: false,
     icon: constant.RESOURCE_PATH + '/images/bell_64.png',
     title: "Reminders"
   });
@@ -39,11 +41,29 @@ function createRemindersWindow() {
     protocol: 'file:',
     slashes: true
   }));
+
+  new Badge(win, {});
+
+  win.webContents.once('dom-ready', () => {
+    win.show();
+    win.minimize();
+    win.webContents.send('showTaskCount', reminder.getTaskCount());              
+
+    updateReminderToRenderer();
+  });
+
+  win.on('close', function (event) {
+    if(!app.isQuiting){
+        event.preventDefault();
+        win.minimize();
+    }
+    return false;
+  });
   
   return win;
 }
 
-function ipcMainFunctions(showLauncher, reminderWin) {
+function ipcMainFunctions(showLauncher) {
   ipcMain.on('onAddReminder', (event) => {
     showLauncher();
   });
@@ -53,21 +73,23 @@ function ipcMainFunctions(showLauncher, reminderWin) {
   });
 
   ipcMain.on('onDeleteReminder', (event, arg) => {
-    reminder.removeReminder(arg);    
-    reminderWin().webContents.send('showTaskCount', reminder.getTaskCount());
+    reminder.removeReminderById(arg.id);    
+    remindersWindow.webContents.send('showTaskCount', reminder.getTaskCount());
   });
 }
 
-function showReminders(showLauncher, reminderWin) {
-  remindersWindow = createRemindersWindow();
-  remindersWindow.once('ready-to-show', () => {
-    remindersWindow.show();
-    updateReminderToRenderer();
-  });
+function showReminders(showLauncher) {  
+  if(remindersWindow == null) {
+    remindersWindow = createRemindersWindow();
+  }
 
-  ipcMainFunctions(showLauncher, reminderWin);
-
+  ipcMainFunctions(showLauncher);  
   //remindersWindow.webContents.openDevTools();
+  return remindersWindow;
+}
+
+function getReminderWindow() {
+  return remindersWindow;
 }
 
 function updateReminderToRenderer() {
@@ -84,5 +106,6 @@ function updateReminderToRenderer() {
 
 module.exports = {
   showReminders: showReminders,
+  getReminderWindow: getReminderWindow,
   updateReminderToRenderer: updateReminderToRenderer  
 };

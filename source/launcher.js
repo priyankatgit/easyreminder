@@ -13,8 +13,7 @@ const {
   const Reminder = require('./reminder.js');
   const Sherlock = require('sherlockjs');
   const notifier = require('electron-notifications');
-  const { updateReminderToRenderer } = require('./reminder_mgmt');
-  const Badge = require('electron-windows-badge');
+  const { updateReminderToRenderer, getReminderWindow } = require('./reminder_mgmt');  
   
   let win = null;
   let trayIcon = constant.TRAY_ICON;
@@ -41,13 +40,6 @@ const {
         protocol: 'file:',
         slashes: true
       }));
-
-      new Badge(win, {});
-      
-      win.webContents.once('dom-ready', () => {
-        win.webContents.send('showTaskCount', reminder.getTaskCount());      
-        win.minimize();      
-      });
   }
 
   function registerShortcuts() {  
@@ -57,14 +49,18 @@ const {
   }
 
   function showLauncher(reminder) {    
+    if(win == null) {
+      setLauncherWindow();
+    }
+
     win.webContents.send('showReminerWin', reminder);
-    win.restore();
+    win.show();
     //win.webContents.openDevTools();
   }
 
   function onReminderEscaped() {
     ipcMain.on('onReminderEscap', (event, arg) => {
-      win.minimize();   
+      win.hide();   
       win.webContents.send('showReminerWin', null);
     });
   }
@@ -114,10 +110,10 @@ const {
       }
   
       reminder.setItem(arg.reminderId, title, startDate, isAllDay, type);
-      win.minimize();
-      win.webContents.send('showTaskCount', reminder.getTaskCount());
-
+      win.hide();
+      win.webContents.send('showReminerWin', null);      
       updateReminderToRenderer();
+      getReminderWindow().webContents.send('showTaskCount', reminder.getTaskCount());
       
       //Donot popup notification if reminder is updated
       if(arg.reminderId != 0) {
@@ -200,7 +196,7 @@ const {
  function initLauncher(tray) {
     appTray = tray;
 
-    setLauncherWindow();
+    //setLauncherWindow();
 
     reminderWatcher();
     
