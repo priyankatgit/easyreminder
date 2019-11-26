@@ -103,7 +103,7 @@ const {
         });
   
         errorNotification.on('buttonClicked', (text, buttonIndex, options) => {
-          notification.close();
+          notification.close();          
         });
   
         return;
@@ -173,16 +173,21 @@ const {
             reminderItem: item
           });
   
-          notification.on('buttonClicked', (text, buttonIndex, options) => {
+          notification.on('buttonClicked', (text, buttonIndex, options) => {            
+            
+            reminder.removeReminderById(options.reminderItem.id);
+            updateReminderToRenderer();
+
             if (text === 'Snooze') {
               win.webContents.send('showReminerWin', options.reminderItem);
-              win.restore();
+              win.show();
             }
-  
-            reminder.removeReminderById(options.reminderItem.id);
-            notification.close();
+            else {
+              //On dismiss notification, update tray task count
+              getReminderWindow().webContents.send('showTaskCount', reminder.getTaskCount());  
+            }
 
-            updateReminderToRenderer();
+            notification.close();            
           });
         }
       }
